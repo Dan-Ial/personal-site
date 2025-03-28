@@ -4,13 +4,9 @@ import React, { Component, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { GlobeProps, GlobeMethods } from "react-globe.gl";
 import { markerSvg } from "../../public/icons";
-import { generateRandomMarkers, markerData, pointsData } from "./GlobeHelper";
+import { generateRandomMarkers, markerData, pointsData, labelsData, GlobeComponentProps } from "./GlobeHelper";
 import { Button } from "./ui/button";
 import ReactDOM from "react-dom/client";
-
-export interface GlobeComponentProps {
-  htmlElements: Array<React.ReactNode>
-}
 
 function GlobeComponent(GlobeComponentProps: GlobeComponentProps) {
   const { htmlElements } = GlobeComponentProps;
@@ -19,6 +15,7 @@ function GlobeComponent(GlobeComponentProps: GlobeComponentProps) {
   const [globeInstance, setGlobeInstance] = useState<GlobeMethods | null>(null);
   const [markers, setMarkers] = useState<markerData[]>([]);
   const [points, setPoints] = useState<pointsData[]>([]);
+  const [labels, setLabels] = useState<labelsData[]>([]);
 
   useEffect(() => {
     import("react-globe.gl").then((mod) => setGlobe(() => mod.default));
@@ -35,14 +32,15 @@ function GlobeComponent(GlobeComponentProps: GlobeComponentProps) {
   }, [globeInstance]);
 
   useEffect(() => {
-    const {newMarkers, newPoints} = generateRandomMarkers(htmlElements);
+    const {newMarkers, newPoints, newLabels} = generateRandomMarkers(htmlElements);
     setMarkers(newMarkers);
     setPoints(newPoints);
+    setLabels(newLabels);
   }, []);
   
   useEffect(() => {
-    console.log(markers);
-  }, [markers]);
+    console.log(labels);
+  }, [labels]);
 
   return (
     <div className="relative w-full h-screen bg-black flex items-center justify-center">
@@ -50,7 +48,7 @@ function GlobeComponent(GlobeComponentProps: GlobeComponentProps) {
         <Globe
           ref={setGlobeInstance}
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-day.jpg"
-          backgroundColor="rgb(255, 255, 255)"
+          backgroundColor="rgb(0, 0, 0)"
           htmlElementsData={markers}
           htmlAltitude={0.3}
           htmlElement={(d: any) => {
@@ -71,7 +69,12 @@ function GlobeComponent(GlobeComponentProps: GlobeComponentProps) {
           }}
           pointsData={points}
           pointAltitude="altitude"
-          pointColor="color"
+          pointColor={() => "rgba(85, 0, 134, 0.75)"}
+          labelsData={labels}
+          labelColor={() => "rgba(85, 0, 134, 0.75)"}
+          labelSize={0.00001}
+          labelAltitude={0.002}
+          labelDotRadius={3}
         />
       )}
     </div>
