@@ -26,10 +26,32 @@ function GlobeComponent(GlobeComponentProps: GlobeComponentProps) {
       const controls = globeInstance.controls();
       if (controls) {
         controls.autoRotate = true;
-        controls.autoRotateSpeed = 0.5;
+        controls.autoRotateSpeed = 100; // Start speed at max
+  
+        const holdDuration = 200; // Time (in ms) to stay at max speed
+        const decayDuration = 1000; // Time (in ms) for slowing down
+        const steps = 50; // Number of steps during decay
+        const intervalTime = decayDuration / steps; // Time per step
+  
+        setTimeout(() => { // Start decay after holding period to make it have a more impactful effect
+          let time = 0;
+  
+          const interval = setInterval(() => {
+            time += intervalTime;
+            const progress = time / decayDuration;
+            const k = 15; // rate of decay
+            controls.autoRotateSpeed = 100 * (1 / (1 + k * progress));
+  
+            if (controls.autoRotateSpeed < 0.25) {
+              controls.autoRotateSpeed = 0.25;
+              clearInterval(interval);
+            }
+          }, intervalTime);
+        }, holdDuration);
       }
     }
   }, [globeInstance]);
+  
 
   useEffect(() => {
     const {newMarkers, newPoints, newLabels} = generateRandomMarkers(htmlElements);
@@ -43,12 +65,14 @@ function GlobeComponent(GlobeComponentProps: GlobeComponentProps) {
   }, [labels]);
 
   return (
-    <div className="relative w-full h-screen bg-black flex items-center justify-center">
+    <div className="relative w-full h-screen bg-black flex items-center justify-center opacity-0 transition-opacity duration-1000 ease-in-out" style={{ opacity: Globe ? 1 : 0 }}>
       {Globe && (
         <Globe
           ref={setGlobeInstance}
           globeImageUrl="//unpkg.com/three-globe/example/img/earth-day.jpg"
           backgroundColor="rgb(0, 0, 0)"
+          waitForGlobeReady={true}
+          animateIn={false}
           htmlElementsData={markers}
           htmlAltitude={0.3}
           htmlElement={(d: any) => {
@@ -73,7 +97,7 @@ function GlobeComponent(GlobeComponentProps: GlobeComponentProps) {
           labelsData={labels}
           labelColor={() => "rgba(85, 0, 134, 0.75)"}
           labelSize={0.00001}
-          labelAltitude={0.002}
+          labelAltitude={0.002} // to reduce texture overlap glitches
           labelDotRadius={3}
         />
       )}
