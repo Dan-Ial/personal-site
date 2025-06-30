@@ -1,14 +1,22 @@
+import { JSX } from "react";
+
 interface location {
   lat: number,
   lng: number
 }
 
-export interface markerData extends location{
+export interface markerDataBasic extends location {
+  _kind: 'basic',
   text: string;
   url: string;
 }
 
-export interface pointsData extends location{
+export interface markerDataElement extends location {
+  _kind: 'element',
+  element: JSX.Element;
+}
+
+export interface pointsData extends location {
   altitude: number;
 }
 
@@ -16,13 +24,19 @@ export interface labelsData extends location {
   text: string;
 }
 
-export interface globeMarkerData {
+export interface globeMarkerDataBasic {
+  _kind: 'basic',
   text: string,
   url: string
 }
 
+export interface globeMarkerDataElement {
+  _kind: 'element',
+  element: JSX.Element;
+}
+
 export interface GlobeComponentProps {
-  htmlElements: Array<globeMarkerData>
+  globeMarkers: Array<globeMarkerDataBasic | globeMarkerDataElement>
 }
 
 function calculateDistance( // credit : https://stackoverflow.com/a/21623206
@@ -39,7 +53,7 @@ function calculateDistance( // credit : https://stackoverflow.com/a/21623206
   return 2 * r * Math.asin(Math.sqrt(a));
 }
 
-function generateNewLocation(previousMarkers: Array<markerData>): location {
+function generateNewLocation(previousMarkers: Array<markerDataBasic | markerDataElement>): location {
   let tooCloseToAnotherPoint = true;
   let lat = 0;
   let lng = 0;
@@ -59,16 +73,22 @@ function generateNewLocation(previousMarkers: Array<markerData>): location {
   return {lat, lng}
 }
 
-export function generateRandomMarkers(elements: Array<globeMarkerData>): {newMarkers: Array<markerData>, newPoints: Array<pointsData>, newLabels: Array<labelsData>} {
-  const newMarkers = new Array<markerData>();
+export function generateRandomMarkers(elements: Array<globeMarkerDataBasic | globeMarkerDataElement>): {newMarkers: Array<markerDataBasic | markerDataElement>, newPoints: Array<pointsData>, newLabels: Array<labelsData>} {
+  const newMarkers = new Array<markerDataBasic | markerDataElement>();
   const newPoints = new Array<pointsData>();
   const newLabels = new Array<labelsData>();
   for (var i = 0; i < elements.length; i++) {
     const {lat, lng} = generateNewLocation(newMarkers);
-    const text = elements[i].text;
-    const url = elements[i].url;
+    if (elements[i]._kind == 'basic') {
+      const text = elements[i].text;
+      const url = elements[i].url;
+      newMarkers.push({ lat, lng, text, url, _kind: 'basic' });
+    }
+    else if (elements[i]._kind == 'element') {
+      const element = elements[i].element;
+      newMarkers.push({ lat, lng, element, _kind: 'element' })
+    }
 
-    newMarkers.push({ lat, lng, text, url });
     newPoints.push({ lat, lng, altitude: 0.3 });
     newLabels.push({ lat, lng, text: "." });
   }

@@ -56,4 +56,26 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+// copy of Button within this file, but utilizing div instead of being a real button element just to simply take advantage of all the pre-existing styling
+function PseudoButton({
+  className,
+  variant,
+  size,
+  asChild = false,
+  ...props
+}: React.ComponentProps<"div"> &
+  VariantProps<typeof buttonVariants> & {
+    asChild?: boolean
+  }) {
+  const Comp = asChild ? Slot : "div"
+
+  return (
+    <Comp
+      data-slot="button"
+      className={cn(buttonVariants({ variant, size, className }))}
+      {...props}
+    />
+  )
+}
+
+export { Button, PseudoButton, buttonVariants }
